@@ -627,7 +627,7 @@ class developercontroller extends Controller
     {
         $developer_id=Session::get('developer_login_id'); 
 
-         $show['developer_details_interview_schedule'] = DB::table('developer_interview_schedule')->where('dev_id', $developer_id)->orderby('dev_id','desc')->get();
+        $show['developer_details_interview_schedule'] = DB::table('developer_interview_schedule')->where('dev_id', $developer_id)->orderby('dev_id','desc')->get();
         
         return view('developer/developer_interview_schedule_details')->with($show);
     }
@@ -906,6 +906,8 @@ class developercontroller extends Controller
                 $expired = now()->addYear();
             else
                 $expired = null;
+
+            
             
             developerPayments::create([
                 'developer_id' => Session::get('developer_login_id'),
@@ -914,13 +916,17 @@ class developercontroller extends Controller
                 'signature' => $request->razorpay_signature,
                 'developer_premium_prices_id' => $request->razorpay_id ?? '',
                 'expired' => $expired,
+                'amount' => $request->amount,
+                'tax' => $request->tax,
             ]);
-            
+
+            $total = $request->amount + $request->tax;
+
             $this->premiumPackageinvoiceEmail(
                 null, 
                 $request->razorpay_order_id,
                 $request->razorpay_payment_id,
-                $developerPremiumPrice->price ?? 0, 
+                $total ?? 0, 
                 'Razorpay'
             );
     
@@ -1822,7 +1828,7 @@ class developercontroller extends Controller
             'ifc_code' => 'required',
             'micr_number' => 'required',
             'account_Type' => 'required',
-            'passbook' => 'required|image|mimes:jpg,png,jpeg,gif|max:5120',
+            'passbook' => 'nullable|image|mimes:jpg,png,jpeg,gif|max:5120',
         ]);   
 
         if(!empty($files=$request->file('passbook')))
@@ -1850,8 +1856,8 @@ class developercontroller extends Controller
        $result=DB::table('developer_details_tb')->where('dev_id',$dev_id)->update($data);
         if($result==true)
         {
-            session(['message' =>'success', 'devkycerrmsg' =>'Bank Details Update Successfully...']);
-            return redirect()->route('developer_kyc');
+            session(['message' =>'success', 'bankerrmsg' =>'Bank Details Update Successfully...']);
+            return redirect()->route('bank_details');
         }
         else
         {

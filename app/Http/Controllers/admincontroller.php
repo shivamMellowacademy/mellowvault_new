@@ -1833,6 +1833,14 @@ public function update_developer_details(Request $request)
             session(['message' => 'warning', 'errmsg' => 'Cannot activate developer. Profile is incomplete. Email sent to user.']);
             return redirect()->back();
         }
+        $count = DB::table('premium_order_tb')->where('dev_id',$devLogin->dev_id)->count();
+        
+        if($count == 0)
+        {
+            session(['message' =>'danger', 'errmsg'=>'The developer has not purchased a premium package.']); 
+             return redirect()->back();
+        }
+
         $Login_status = $devLogin->login_status;
         
         // call new panels api for saving active developer
@@ -1848,7 +1856,6 @@ public function update_developer_details(Request $request)
             'location_id' => 1,
             'application_sources' => 'addedByUser'
         ];
-        // $response = Http::withoutVerifying()->post('https://gulbug.com/staging/mellow_backend/public/api/job-applications', $payload);
         $url = env('URL').'/api/job-applications';
         $response = Http::withoutVerifying()->post($url, $payload);
             
@@ -1888,6 +1895,7 @@ public function update_developer_details(Request $request)
                 return redirect()->back();
             }
         }else{
+
             $data=array(
                 'login_status'=>1,
                 'developer_status'=>"Active",

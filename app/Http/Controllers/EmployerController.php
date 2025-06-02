@@ -18,6 +18,13 @@ class EmployerController extends Controller
         $user = Employer::findOrFail($id);
         $user->status = !$user->status;
         $user->save();
+
+        $url = env('URL').'/api/employer-status?email='.$user->email;
+        $response = Http::withoutVerifying()->get($url);
+
+
+
+
         return redirect()->back()->with('success', 'Employer status updated successfully.');
     }
 

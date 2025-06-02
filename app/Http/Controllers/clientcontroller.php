@@ -830,9 +830,30 @@ class clientcontroller extends Controller
     
     public function kycForm()
     {
+        $show['developer_order_details']=$this->developer_order_data();
+    	$show['user_details'] = DB::table('user_login')->orderby('id','desc')->get(); 
+        $show['category'] = DB::table('category_tb')->orderby('id','desc')->get();
+        $show['banner'] = DB::table('banner_tb')->orderby('id','desc')->get();
+        $show['subcategorys'] = DB::table('subcategory_tb')->orderby('id','asc')->get();
+        $show['higher_professional'] = DB::table('higher_professional_tb')->orderby('id','desc')->get();
+
+        $show['web_details'] = DB::table('web_setting')->get();
+
+        $show['cart_details'] = DB::table('cart_tb')
+        ->select('product_tb.name','product_tb.image','product_tb.tax','product_tb.video','product_tb.price','product_tb.pro_size','product_tb.id','cart_tb.u_id','cart_tb.id','cart_tb.status')
+        ->join('product_tb','product_tb.id', '=', 'cart_tb.p_id')
+        ->whereNull('status')
+        ->get();
+
+        $u_id=Session::get('user_login_id'); 
+
+        $show['cart_value'] = DB::table('cart_tb')->where('status' ,'=', Null)->where('u_id' ,'=', $u_id )->count();
+        $show['cart_empty'] = DB::table('cart_tb')->where('status' ,'=', Null)->where('u_id' ,'=', $u_id )->count();
+        $show['developer_cart_empty'] = DB::table('developer_cart_tb')->where('status' ,'=', Null)->where('u_id' ,'=', $u_id )->count();
+        $show['developer_cart_value'] = DB::table('developer_cart_tb')->where('status' ,'=', Null)->where('u_id' ,'=', $u_id )->count();
         $employerId = Session::get('client_login_id');
         $kyc = EmployerKyc::where('employer_id', $employerId)->first();
-        return view('client.kyc_form', compact('kyc'));
+        return view('client.kyc_form', compact('kyc'))->with($show);
     }
 
     public function kycStore(Request $request)
@@ -898,9 +919,30 @@ class clientcontroller extends Controller
 
     public function bankForm()
     {
+        $show['developer_order_details']=$this->developer_order_data();
+    	$show['user_details'] = DB::table('user_login')->orderby('id','desc')->get(); 
+        $show['category'] = DB::table('category_tb')->orderby('id','desc')->get();
+        $show['banner'] = DB::table('banner_tb')->orderby('id','desc')->get();
+        $show['subcategorys'] = DB::table('subcategory_tb')->orderby('id','asc')->get();
+        $show['higher_professional'] = DB::table('higher_professional_tb')->orderby('id','desc')->get();
+
+        $show['web_details'] = DB::table('web_setting')->get();
+
+        $show['cart_details'] = DB::table('cart_tb')
+        ->select('product_tb.name','product_tb.image','product_tb.tax','product_tb.video','product_tb.price','product_tb.pro_size','product_tb.id','cart_tb.u_id','cart_tb.id','cart_tb.status')
+        ->join('product_tb','product_tb.id', '=', 'cart_tb.p_id')
+        ->whereNull('status')
+        ->get();
+
+        $u_id=Session::get('user_login_id'); 
+
+        $show['cart_value'] = DB::table('cart_tb')->where('status' ,'=', Null)->where('u_id' ,'=', $u_id )->count();
+        $show['cart_empty'] = DB::table('cart_tb')->where('status' ,'=', Null)->where('u_id' ,'=', $u_id )->count();
+        $show['developer_cart_empty'] = DB::table('developer_cart_tb')->where('status' ,'=', Null)->where('u_id' ,'=', $u_id )->count();
+        $show['developer_cart_value'] = DB::table('developer_cart_tb')->where('status' ,'=', Null)->where('u_id' ,'=', $u_id )->count();
         $employerId = Session::get('client_login_id');
         $bank = EmployerBankDetail::where('employer_id', $employerId)->first();
-        return view('client.bank_form', compact('bank'));
+        return view('client.bank_form', compact('bank'))->with($show);
     }
 
 
@@ -940,6 +982,10 @@ class clientcontroller extends Controller
 
     return redirect()->back()->with('success', 'Bank details submitted.');
 }
-
+public function developer_order_data()
+    { 
+        $u_id=Session::get('user_login_id');  
+        return  $developer_order_details = DB::table('developer_order_tb')->where('payment_status' ,'=', 'SUCCESS')->where('u_id' ,'=', $u_id )->count();
+    }
     
 }

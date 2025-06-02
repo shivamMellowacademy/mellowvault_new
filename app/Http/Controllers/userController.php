@@ -111,7 +111,17 @@ class userController extends Controller
         ]);
              
 		$url = env('URL').'/api/employer-register';
-        $response = Http::withoutVerifying()->post($url, [
+       return $data =  [
+            'company_name' => $request->input('company_name'),
+            'email' => $request->input('email'),
+            'phone' => $request->input('phone'),
+            'fname' => $request->input('fname'),
+            'lname' => $request->input('lname'),
+            'show_password' => $request->input('password'),
+            'location' => $request->input('location'),
+	   ];
+	   
+	   $response = Http::withoutVerifying()->post($url, [
             'company_name' => $request->input('company_name'),
             'email' => $request->input('email'),
             'phone' => $request->input('phone'),
@@ -176,13 +186,13 @@ class userController extends Controller
 					session(['message' =>'success', 'errmsg' =>'Registration Complete']);
 					
 
-						Mail::send('registration_mail', $datas, function($message) use ($emails, $files) {
-                		$message->to($emails)->subject('Mellow Elements');
-                		foreach ($files as $file){
-                            $message->attach($file);
-                        }
-                		$message->from('welcome@mellowvault.com', 'Mellow Vault');
-            		});
+					// 	Mail::send('registration_mail', $datas, function($message) use ($emails, $files) {
+                	// 	$message->to($emails)->subject('Mellow Elements');
+                	// 	foreach ($files as $file){
+                    //         $message->attach($file);
+                    //     }
+                	// 	$message->from('welcome@mellowvault.com', 'Mellow Vault');
+            		// });
             		
             		$show['developer_order_details']=$this->developer_order_data();
                 	$show['user_details'] = DB::table('user_login')->orderby('id','desc')->get(); 
@@ -919,7 +929,7 @@ class userController extends Controller
 			'phone'=>$request->post('phone'),
 			'user_name'=>$request->post('user_name'),
 			'company_name'=>$request->post('company_name'),
-			'purpose'=>$request->post('user_purpose'),
+			'purpose'=>$request->post('purpose'),
 			'date'=>date('Y-m-d')
 		);
 
