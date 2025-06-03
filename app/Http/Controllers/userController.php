@@ -111,7 +111,7 @@ class userController extends Controller
         ]);
              
 		$url = env('URL').'/api/employer-register';
-       return $data =  [
+        $data =  [
             'company_name' => $request->input('company_name'),
             'email' => $request->input('email'),
             'phone' => $request->input('phone'),
