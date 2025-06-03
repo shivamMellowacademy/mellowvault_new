@@ -24,6 +24,7 @@
             <ol class="breadcrumb">
                 <li class="breadcrumb-item"><a href="#">Employer List</a></li>
                 <!-- <li class="breadcrumb-item active" aria-current="page">Details</li> -->
+                  
             </ol>
         </nav>
     </div>
@@ -32,7 +33,9 @@
             <div class="col">
                 <div class="card">
                     <div class="card-body">
-
+                    <a href="{{ route('export.employers') }}" class="btn btn-success btn-sm mb-3">
+                        <i class="fas fa-file-excel me-1"></i> Export to Excel
+                    </a>
                         <table id="complex-header" class="table table-striped table-bordered">
                             <thead class="bg-primary">
                                 <tr>

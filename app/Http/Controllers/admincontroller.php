@@ -18,6 +18,12 @@ use App\Models\developerPremiumPrice;
 use App\Models\Premium;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\File;
+use Maatwebsite\Excel\Facades\Excel;
+use App\Exports\EmployeePayoutExport;
+use App\Exports\ActiveDeveloperDetailsExport;
+use App\Exports\premiumDeveloperExcel;
+use App\Exports\resoureDetailsExcel;
+
 
 class admincontroller extends Controller
 {
@@ -3305,55 +3311,60 @@ public function update_developer_details(Request $request)
         return response()->json(['success' => true, 'massege' => "Successfully deleted"]);
     }
     
-        public function premiumPriceStore(Request $request)
-        {  
-            developerPremiumPrice::where('id', $request->name)->update([
-                'price' => $request->price,
-            ]);
+    public function premiumPriceStore(Request $request)
+    {  
+        developerPremiumPrice::where('id', $request->name)->update([
+            'price' => $request->price,
+        ]);
+
+        return redirect()->back()->with('success', 'Premium Price updated successfully.');
+
+
+    }
     
-            return redirect()->back()->with('success', 'Premium Price updated successfully.');
-    
-    
-        }
-        
-        public function sendEmail(Request $request)
-        {
-            $request->validate([
-                'email' => 'required|email',
-                'subject' => 'required|string|max:255',
-                'message' => 'required|string',
-            ]);
-        
-            Mail::raw($request->message, function ($message) use ($request) {
-                $message->to($request->email)
-                        ->subject($request->subject);
-            });
-        
-            session(['message' => 'success', 'errmsg' => 'Email sent successfully!.']);
-            return redirect()->back();
-        }
-        
-        public function subscriptionPlan()
-        { 
-            $email= Session::get('admin_login_role');
-            $data['rolesdetails'] = DB::table('admin_tb')->where('role',$email)->get();
-            // $data['web_hosting'] = DB::table('web_hosting_tb')->orderby('id','asc')->get();
-    
-            $data['premium'] = Premium::orderBy('id', 'desc')->get();
-            
-            $data['prices'] = developerPremiumPrice::orderBy('id', 'desc')->get();
-    
-            return view('admin.subscription_plan')->with($data);
-        }
-        
-        public function employeeSalaryDue()
+    public function sendEmail(Request $request)
     {
+        $request->validate([
+            'email' => 'required|email',
+            'subject' => 'required|string|max:255',
+            'message' => 'required|string',
+        ]);
+    
+        Mail::raw($request->message, function ($message) use ($request) {
+            $message->to($request->email)
+                    ->subject($request->subject);
+        });
+    
+        session(['message' => 'success', 'errmsg' => 'Email sent successfully!.']);
+        return redirect()->back();
+    }
+    
+    public function subscriptionPlan()
+    { 
+        $email= Session::get('admin_login_role');
+        $data['rolesdetails'] = DB::table('admin_tb')->where('role',$email)->get();
+        // $data['web_hosting'] = DB::table('web_hosting_tb')->orderby('id','asc')->get();
+
+        $data['premium'] = Premium::orderBy('id', 'desc')->get();
+        
+        $data['prices'] = developerPremiumPrice::orderBy('id', 'desc')->get();
+
+        return view('admin.subscription_plan')->with($data);
+    }
+    
+    public function employeeSalaryDue()
+    {
+         $email= Session::get('admin_login_role');
+         
         $payout = DB::table('developer_payment_monthly as d')
         ->join('user_login as u', 'u.id', '=','d.u_id')
         ->where('d.payment_status', 'unpaid')
         ->groupBy('d.u_id')
         ->get();
-        return view('admin.employeeSalaryDue', compact('payout'));
+
+        $data['rolesdetails'] = DB::table('admin_tb')->where('role',$email)->get();
+
+        return view('admin.employeeSalaryDue', compact('payout'))->with($data);
     }
 
     public function employeeSalaryDueId($id)
@@ -3369,13 +3380,40 @@ public function update_developer_details(Request $request)
     
     public function employeeAdvanceDue()
     {
+        $email= Session::get('admin_login_role');
+
+        $data['rolesdetails'] = DB::table('admin_tb')->where('role',$email)->get();
+
         $payout = DB::table('developer_order_tb as d')
                 ->join('user_login as u', 'u.id', '=','d.u_id')
                 ->where('d.status', 2)
                 ->whereColumn('d.perhr', '!=', 'd.payment_amount')
                 ->get();
 
-        return view('admin.employeeAdvanceDue', compact('payout'));
+        return view('admin.employeeAdvanceDue', compact('payout'))->with($data);
+    }
+
+    public function getEmployeePayout()
+    {
+        $payout = DB::table('developer_order_tb as d')
+            ->join('user_login as u', 'u.id', '=', 'd.u_id')
+            ->where('d.status', 2)
+            ->whereColumn('d.perhr', '!=', 'd.payment_amount')
+            ->get();
+
+        return Excel::download(new EmployeePayoutExport($payout), 'employee_payout.xlsx');
+    }
+
+    public function activeDeveloperDetails()
+    {
+        $payout = DB::table('developer_details_tb')
+        ->select('higher_professional_tb.id as ids','higher_professional_tb.heading','developer_details_tb.dev_id','developer_details_tb.pro_id','developer_details_tb.name','developer_details_tb.last_name','developer_details_tb.description','developer_details_tb.image','developer_details_tb.phone','developer_details_tb.email','developer_details_tb.job','developer_details_tb.perhr','developer_details_tb.total_hours','developer_details_tb.rating','developer_details_tb.address','developer_details_tb.language','developer_details_tb.education','developer_details_tb.skills','developer_details_tb.completed_job','developer_details_tb.portfolio_image','developer_details_tb.resume','developer_details_tb.developer_status','developer_details_tb.available_start_date','developer_details_tb.available_end_date','developer_details_tb.login_status','developer_details_tb.clg_name','developer_details_tb.degree','developer_details_tb.percentage','developer_details_tb.passing_year','developer_details_tb.bank_name','developer_details_tb.branch_name','developer_details_tb.acct_name','developer_details_tb.account_number','developer_details_tb.ifc_code','developer_details_tb.micr_number','developer_details_tb.passbook','developer_details_tb.account_Type')
+        ->join('higher_professional_tb','higher_professional_tb.id' , '=' , 'developer_details_tb.pro_id')
+        ->where('developer_details_tb.login_status',1)
+        ->orderby('developer_details_tb.dev_id','desc')
+        ->get();
+
+        return Excel::download(new ActiveDeveloperDetailsExport($payout), 'active_developer_details.xlsx');
     }
     
     public function employeeDetails($id)
@@ -3388,6 +3426,22 @@ public function update_developer_details(Request $request)
                 ->get();
 
         return view('admin.employeeAdvanceDueView', compact('payout'));
+    }
+    
+    public function premiumDeveloperExcel()
+    {
+        $payout = DB::table('premium_order_tb')->orderby('id','desc')->get();
+
+        return Excel::download(new premiumDeveloperExcel($payout), 'premium_developer.xlsx');
+    }
+    public function resoureDetailsExcel()
+    {
+        $payout =  DB::table('developer_order_tb')
+        ->select('developer_details_tb.dev_id','developer_details_tb.name','developer_details_tb.last_name','developer_details_tb.address','developer_details_tb.phone as dev_phone','developer_details_tb.job','developer_details_tb.total_hours','developer_details_tb.perhr','developer_details_tb.rating','developer_details_tb.language','developer_details_tb.education','developer_details_tb.description','developer_details_tb.skills','developer_details_tb.completed_job','developer_details_tb.image','developer_details_tb.portfolio_image','developer_details_tb.resume','developer_details_tb.date','developer_order_tb.fname','developer_order_tb.lname','developer_order_tb.dev_id','developer_order_tb.phone','developer_order_tb.address_one','developer_order_tb.email','developer_order_tb.u_id','developer_order_tb.country','developer_order_tb.state','developer_order_tb.city','developer_order_tb.payment_status')
+        ->join('developer_details_tb','developer_details_tb.dev_id', '=', 'developer_order_tb.dev_id')
+        ->get();
+
+        return Excel::download(new resoureDetailsExcel($payout), 'resoure_details.xlsx');
     }
     
 }

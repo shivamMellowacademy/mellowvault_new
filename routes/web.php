@@ -579,3 +579,10 @@ Route::post('/verify-payment', 'App\Http\Controllers\userController@verifyPaymen
 Route::get('/check-monthly-payments', 'App\Http\Controllers\userController@checkMonthlyPayments')->name('check.monthly.payments');
 Route::get('/pay-salary-payment/{id}', 'App\Http\Controllers\userController@processSalaryPayment')->name('pay.salary.payment');
 Route::post('/verify-salary-payment', 'App\Http\Controllers\userController@verifySalaryPayment')->name('verify.salary.payment');
+
+Route::get('/export-employee-payout', 'App\Http\Controllers\adminController@getEmployeePayout')->name('admin.employee.export');
+Route::get('/export-active-developer-details', 'App\Http\Controllers\adminController@activeDeveloperDetails')->name('active.developer.details.export');
+Route::get('/export-premium-developer', 'App\Http\Controllers\adminController@premiumDeveloperExcel')->name('premium.developer.export');
+Route::get('/export-resoure-details', 'App\Http\Controllers\adminController@resoureDetailsExcel')->name('resoure.details.export');
+
+Route::get('/export-employers', [EmployerController::class, 'exportEmployers'])->name('export.employers');
