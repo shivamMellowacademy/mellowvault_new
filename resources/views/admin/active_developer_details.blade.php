@@ -23,6 +23,9 @@
         <a href="{{ route('developer_details') }}" class="btn btn-primary">
             <i class="fa fa-plus"></i> Add Developer
         </a>
+         <a href="{{ route('active.developer.details.export') }}" class="btn btn-success btn-sm mb-3">
+            <i class="fas fa-file-excel me-1"></i> Export to Excel
+        </a>
     </div>
     </div>
         <div class="row">

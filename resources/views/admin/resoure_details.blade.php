@@ -14,6 +14,13 @@
         <div class="row">
             <div class="col">
                 <div class="card">
+                    <div class="card-header d-flex justify-content-between align-items-center">
+                        <h5 class="mb-0">Premium Developer Details</h5>
+                    
+                        <a href="{{ route('resoure.details.export') }}" class="btn btn-success btn-sm mb-3">
+                            <i class="fas fa-file-excel me-1"></i> Export to Excel
+                        </a>
+                    </div>
                     <div class="card-body">
                         <table id="complex-header" class="table table-striped table-bordered" style="width:100%">
                             <thead class="bg-primary">

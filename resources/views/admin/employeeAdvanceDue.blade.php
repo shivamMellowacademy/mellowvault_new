@@ -21,7 +21,9 @@
                 <div class="card">
                     <div class="card-body">
                         <h5 class="card-title">Employee Salary Due</h5>
-                        
+                        <a href="{{ route('admin.employee.export') }}" class="btn btn-success btn-sm mb-3">
+                            <i class="fas fa-file-excel me-1"></i> Export to Excel
+                        </a>
                         <div class="row">
                             <div class="col-sm-12">
                                 <div class="table-responsive">  
