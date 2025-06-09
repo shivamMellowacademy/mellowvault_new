@@ -18,6 +18,7 @@
         "laravel/tinker": "^2.5",
         "maatwebsite/excel": "^3.1",
         "madnest/madzipper": "^1.1",
+        "phpmailer/phpmailer": "^6.10",
         "razorpay/razorpay": "^2.7"
     },
     "require-dev": {

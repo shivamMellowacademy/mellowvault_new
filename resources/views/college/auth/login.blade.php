@@ -82,13 +82,30 @@
 
         <h4>College Login</h4>
 
-        @if(Session::has('errmsg'))                 
-            <div class="alert alert-{{ Session::get('message') }} alert-dismissible fade show" role="alert">
-                <strong>{{ Session::get('errmsg') }}</strong>
+        <!-- Display success message -->
+        @if(Session::has('success'))
+            <div class="alert alert-success alert-dismissible fade show" role="alert">
+                <strong>{{ Session::get('success') }}</strong>
                 <button type="button" class="close" data-dismiss="alert">&times;</button>
             </div>
-            {{ Session::forget('message') }}
-            {{ Session::forget('errmsg') }}
+        @endif
+
+        <!-- Display error message -->
+        @if(Session::has('message'))
+            <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                <strong>{{ Session::get('message') }}</strong>
+                <button type="button" class="close" data-dismiss="alert">&times;</button>
+            </div>
+        @endif
+
+        <!-- Display login errors -->
+        @if($errors->any())
+            <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                @foreach ($errors->all() as $error)
+                    <strong>{{ $error }}</strong><br>
+                @endforeach
+                <button type="button" class="close" data-dismiss="alert">&times;</button>
+            </div>
         @endif
 
         <form method="post" action="{{ route('college.login') }}">

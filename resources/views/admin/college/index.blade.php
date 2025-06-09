@@ -1,44 +1,42 @@
 @extends('admin.layout')
 @section('content')
 
-<div class="page-content">
-    <div class="main-wrapper container">   
+
+<div class="page-content" style="margin-top:100px">
+    <div class="main-wrapper container">
+        <div class="page-info d-flex justify-content-between align-items-center">
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="#">College</a></li>
+                    <li class="breadcrumb-item active" aria-current="page">Details</li>
+                </ol>
+            </nav>
+            <div class="page-actions">
+                <a href="{{ route('admin.college.create') }}" class="btn btn-primary">
+                    <i class="fas fa-plus"></i> Add New College
+                </a>
+            </div>
+        </div>
+        
+        <!-- Rest of your content remains the same -->
         <div class="row">
             <div class="col-xl">
                 <div class="row">
-                    <div class="col-lg-8 ml-auto mr-auto">
-                        @if(Session::has('errmsg'))                 
-                            <div class="alert alert-{{Session::get('message')}} alert-dismissible">
+                    <div class="col-lg-12 ml-auto mr-auto">
+                        @if(Session::has('success'))                 
+                            <div class="alert alert-success alert-dismissible">
                                 <button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button>  
-                                <strong>{{Session::get('errmsg')}}</strong>
+                                <strong>{{Session::get('success')}}</strong>
                             </div>
                             {{Session::forget('message')}}
-                            {{Session::forget('errmsg')}}
+                            {{Session::forget('success')}}
                         @endif
                         <br><br>
                     </div>
                 </div>
             </div>
         </div>
-    </div>
-</div>
-
-<div class="page-content">
-    <div class="page-info container">
-        <nav aria-label="breadcrumb">
-            <ol class="breadcrumb">
-                <li class="breadcrumb-item"><a href="#">College</a></li>
-                <li class="breadcrumb-item active" aria-current="page">Details</li>
-            </ol>
-        </nav>
-        <div class="page-actions">
-            <a href="{{ route('admin.college.create') }}" class="btn btn-primary">
-                <i class="fas fa-plus"></i> Add New College
-            </a>
-        </div>
-    </div>
-    
-    <div class="main-wrapper container">
+            
         <div class="row">
             <div class="col">
                 <div class="card">

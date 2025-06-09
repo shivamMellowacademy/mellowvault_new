@@ -23,6 +23,29 @@
                         </div>
                     </div>
                     <div class="card-body">
+                         @if(session('success'))
+                            <div class="alert alert-success alert-dismissible fade show" role="alert">
+                                <strong><i class="fa fa-check-circle me-2"></i> {{ session('success') }}</strong>
+                            </div>
+                        @endif
+
+                        @if(session('error'))
+                            <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                                <strong><i class="fa fa-exclamation-circle me-2"></i> {{ session('error') }}</strong>
+                            </div>
+                        @endif
+
+                        <!-- Form Validation Errors -->
+                        @if($errors->any())
+                            <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                                <strong><i class="fa fa-exclamation-circle me-2"></i> Please fix the following errors:</strong>
+                                <ul class="mb-0">
+                                    @foreach ($errors->all() as $error)
+                                        <li>{{ $error }}</li>
+                                    @endforeach
+                                </ul>
+                            </div>
+                        @endif
                         <form method="post" action="{{ route('college.developers.store') }}" id="developerForm">
                             @csrf
                             
@@ -31,8 +54,8 @@
                                 <select name="specialization" id="specialization" class="form-select w-100" required>
                                     <option value="" disabled selected>Select specialization</option>
                                     @foreach($college_list as $specialization)
-                                        <option value="{{ $specialization }}" {{ old('specialization') == $specialization ? 'selected' : '' }}>
-                                            {{ $specialization }}
+                                        <option value="{{ $specialization->id }}" {{ old('specialization') == $specialization ? 'selected' : '' }}>
+                                            {{ $specialization->heading }}
                                         </option>
                                     @endforeach
                                 </select>

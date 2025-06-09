@@ -617,10 +617,7 @@ Route::get('/college/dashboard', [CollegeController::class, 'dashboard'])->name(
 Route::get('/college/developers/index', [CollegeController::class, 'developersIndex'])->name('college.developers.index');
 Route::get('/college/developers/create', [CollegeController::class, 'developersCreate'])->name('college.developers.create');
 Route::post('/college/developers/store', [CollegeController::class, 'developersStore'])->name('college.developers.store');
-
-
-Route::get('/college/dashboard/stats', [CollegeController::class, 'dashboardStats'])->name('college.dashboard.stats');
-Route::get('/college/developers/show', [CollegeController::class, 'developersShow'])->name('college.developers.show');
-Route::get('/college/developers/edit', [CollegeController::class, 'developersEdit'])->name('college.developers.edit');
-
-Route::get('/college/developers/toggle-status', [CollegeController::class, 'developersToggleStatus'])->name('college.developers.toggle-status');
+Route::get('/college/developers/show/{id}', [CollegeController::class, 'developersShow'])->name('college.developers.show');
+Route::get('/college/logout', [CollegeController::class, 'collegeLogout'])->name('college.logout');
+Route::get('/college/change/password', [CollegeController::class, 'collegeChangePassword'])->name('college.change_password');
+Route::post('/college/password/update', [CollegeController::class, 'collegePasswordUpdate'])->name('college.password.update');

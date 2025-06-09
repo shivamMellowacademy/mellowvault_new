@@ -77,9 +77,9 @@
                                     alt="profile image">
                             </a>
                             <div class="dropdown-menu" aria-labelledby="navbarDropdown">
-                                <a class="dropdown-item" href="change_password">Settings</a>
+                                <a class="dropdown-item" href="{{route('college.change_password')}}">Settings</a>
                                 <div class="dropdown-divider"></div>
-                                <a class="dropdown-item" href="{{route('logout')}}">Log out</a>
+                                <a class="dropdown-item" href="{{route('college.logout')}}">Log out</a>
                             </div>
                         </li>
                     </ul>
@@ -107,17 +107,22 @@
                     <div class="row">
                         <div class="col-12">
                             <div class="horizontal-bar-menu">
-                               
                                 <ul>
                                     <!-- Dashboard -->
                                     <li>
-                                        <a href="{{ route('dashboard') }}"
-                                            class="{{ request()->routeIs('dashboard') ? 'active' : '' }}">
+                                        <a href="{{ route('college.dashboard') }}"
+                                            class="{{ request()->routeIs('college.dashboard') ? 'active' : '' }}">
                                             <i class="material-icons">dashboard</i> Dashboard
                                         </a>
                                     </li>
 
-                                   
+                                   <!-- developers -->
+                                    <li>
+                                        <a href="{{ route('college.developers.index') }}"
+                                            class="{{ request()->routeIs('college.developers.index') ? 'active' : '' }}">
+                                           <i class="material-icons">code</i> Developer
+                                        </a>
+                                    </li>
                             </div>
                         </div>
                     </div>

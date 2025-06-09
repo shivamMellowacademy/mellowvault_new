@@ -69,13 +69,21 @@
                                 <p class="text-center mb-4">Please sign in to access your account</p>
                                 
                                 <!-- Error Messages -->
-                                @if(Session::has('errmsg'))
-                                <div class="alert alert-{{Session::get('message')}} alert-custom alert-dismissible fade show" role="alert">
+                            @if(session('error'))
+                                <div class="alert alert-danger alert-custom alert-dismissible fade show" role="alert">
                                     <i class="fa fa-exclamation-circle me-2"></i>
-                                    <strong>{{Session::pull('errmsg')}}</strong>
+                                    <strong>{{ session('error') }}</strong>
+                                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
                                 </div>
-                              
-                                @endif
+                            @endif
+
+                            @if(session('success'))
+                                <div class="alert alert-success alert-custom alert-dismissible fade show" role="alert">
+                                    <i class="fa fa-check-circle me-2"></i>
+                                    <strong>{{ session('success') }}</strong>
+                                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                                </div>
+                            @endif
                                 
                                 <!-- Login Form -->
                                 <form method="post" action="{{route('login_verification')}}" id="loginForm">

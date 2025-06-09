@@ -257,21 +257,7 @@
         }).css('opacity', 0);
         
         // Update dashboard every 60 seconds
-        setInterval(function() {
-            $.get('{{ route("college.dashboard.stats") }}', function(data) {
-                // Update counters with animation
-                $('.card-counter').each(function() {
-                    var $this = $(this);
-                    jQuery({ Counter: 0 }).animate({ Counter: data[$this.data('counter')] }, {
-                        duration: 1000,
-                        easing: 'swing',
-                        step: function() {
-                            $this.text(Math.ceil(this.Counter));
-                        }
-                    });
-                });
-            });
-        }, 60000);
+       
     });
 </script>
 

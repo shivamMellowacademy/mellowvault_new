@@ -63,7 +63,6 @@
                                         <th>ID</th>
                                         <th>Name</th>
                                         <th>Email</th>
-                                        <th>Status</th>
                                         <th>Profile Complete</th>
                                         <th>Actions</th>
                                     </tr>
@@ -74,12 +73,6 @@
                                             <td>{{ $developer->dev_id }}</td>
                                             <td>{{ $developer->name }}</td>
                                             <td>{{ $developer->email }}</td>
-                                            
-                                            <td>
-                                                <span class="badge badge-{{ $developer->developer_status == 'active' ? 'success' : 'secondary' }}">
-                                                    {{ ucfirst($developer->developer_status) }}
-                                                </span>
-                                            </td>
                                             <td>
                                                 <span class="badge badge-{{ $developer->profile_complete == 'Yes' ? 'success' : 'warning' }}">
                                                     {{ $developer->profile_complete }}
@@ -167,41 +160,7 @@
         $('[title]').tooltip();
         
         // Status toggle functionality
-        $('.toggle-status').click(function() {
-            const developerId = $(this).data('id');
-            const button = $(this);
-            
-            $.ajax({
-                url: "{{ route('college.developers.toggle-status') }}",
-                method: "POST",
-                data: {
-                    _token: "{{ csrf_token() }}",
-                    id: developerId
-                },
-                success: function(response) {
-                    if (response.success) {
-                        // Update button appearance
-                        if (response.new_status === 'active') {
-                            button.removeClass('btn-success').addClass('btn-danger');
-                            button.html('<i class="fas fa-times"></i>');
-                            button.attr('title', 'Deactivate');
-                            button.closest('tr').find('.badge').removeClass('badge-secondary').addClass('badge-success').text('Active');
-                        } else {
-                            button.removeClass('btn-danger').addClass('btn-success');
-                            button.html('<i class="fas fa-check"></i>');
-                            button.attr('title', 'Activate');
-                            button.closest('tr').find('.badge').removeClass('badge-success').addClass('badge-secondary').text('Inactive');
-                        }
-                        
-                        // Show success message
-                        toastr.success(response.message);
-                    }
-                },
-                error: function(xhr) {
-                    toastr.error('An error occurred. Please try again.');
-                }
-            });
-        });
+        
     });
 </script>
 @endsection

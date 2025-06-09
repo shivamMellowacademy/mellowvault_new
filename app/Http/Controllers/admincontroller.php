@@ -3701,4 +3701,56 @@ public function update_developer_details(Request $request)
                 ->with('error', 'Error updating college: ' . $e->getMessage());
         }
     }
+
+        /**
+     * Delete a college record
+     *
+     * @param int $id College ID
+     * @return \Illuminate\Http\JsonResponse
+     */
+    public function collegeDestroy($id)
+    {
+        try {
+            // Validate the ID
+            $validatedData = validator(['id' => $id], [
+                'id' => 'required|exists:college,id'
+            ])->validate();
+            // Find the college
+            $college = DB::table('college')->where('id', $validatedData['id'])->delete();
+
+            // Return success response
+             return redirect()->route('admin.college.index')
+                ->with('success', 'College deleted successfully!');
+           
+
+        } catch (ValidationException $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Validation error',
+                'errors' => $e->errors()
+            ], 422);
+            return redirect()->route('admin.college.index')
+                ->with('success', 'College deleted successfully!');
+
+        } catch (ModelNotFoundException $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'College not found'
+            ], 404);
+
+        } catch (AuthorizationException $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Unauthorized to delete college'
+            ], 403);
+
+        } catch (\Exception $e) {
+            
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to delete college',
+                'error' => config('app.debug') ? $e->getMessage() : null
+            ], 500);
+        }
+    }
 }

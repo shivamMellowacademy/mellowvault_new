@@ -23,6 +23,8 @@ use App\Services\UltraMsgService;
 use Illuminate\Support\Facades\Mail;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Support\Facades\Log;
+use PHPMailer\PHPMailer\PHPMailer;
+use PHPMailer\PHPMailer\Exception;
 
 
 class developercontroller extends Controller
@@ -49,9 +51,10 @@ class developercontroller extends Controller
         $show['higher_professional'] = DB::table('higher_professional_tb')->orderby('id','desc')->get();
         return view('developer/developer_registration')->with($show);
     }
+    
     public function submit_developer_registration(Request $request)
-    {   
-        request()->validate([
+    {
+        $request->validate([
             'name' => 'required',
             'last_name' => 'required',
             'email' => 'required|email',
@@ -59,73 +62,73 @@ class developercontroller extends Controller
             'password' => 'required|min:5',
             'pro_id' => 'required',
         ]);
-        
-            $email=$request->post('email');
-            
-            $count = DB::table('developer_details_tb')->where('email',$email)->count();
-    
-            if($count == 0)
-            {
-                $data=array(
-                    'pro_id'=>$request->post('pro_id'),
-                    'name'=>$request->post('name'),
-                    'last_name'=>$request->post('last_name'),
-                    'phone'=>$request->post('phone'),
-                    'email'=>$request->post('email'),
-                    'password'=>Hash::make($request->post('password')),
-                    'show_password'=>$request->post('password'),
-                    'profile_complete'=>30,
-                    'developer_status'=>"Inactive",
-                    'date'=>date('y/m/d')
-                );
 
-                $result=DB::table('developer_details_tb')->insert($data);
+        $email = $request->email;
 
-                $email=$request->post('email'); 
-        
-                $details = DB::table('developer_details_tb')->where('email',$email)->get();
-                $emails=array();
-                foreach ($details as $key) 
-                {
-                    $emails[]= $key->email;
-                    $email= $key->email;
-                    $fname= $key->name;
-                }
+        // Check if email exists
+        if (DB::table('developer_details_tb')->where('email', $email)->exists()) {
+            return redirect()->back()
+                ->with('error', 'Email Address Already Exists.')
+                ->withInput();
+        }
 
-               $datas=array(
-                    'email'=>$email,
-                    'fname'=>$fname
-                );
+        try {
+            DB::beginTransaction();
 
-                if($result==true)
-                {
-                    session(['message' =>'success', 'errmsg' =>'Registration Complete']);
+            // Insert developer data
+            $developerId = DB::table('developer_details_tb')->insertGetId([
+                'pro_id' => $request->pro_id,
+                'name' => $request->name,
+                'last_name' => $request->last_name,
+                'phone' => $request->phone,
+                'email' => $email,
+                'password' => Hash::make($request->password),
+                'show_password' => $request->password,
+                'profile_complete' => 30,
+                'developer_status' => "Inactive",
+                'date' => now()->format('y/m/d'),
+            ]);
 
-                        Mail::send('registration_mail', $datas, function($message) use ($emails) {
-                        $message->to($emails)->subject('Mellow Elements');
-                        $message->from('dev@mellowelements.in', 'Mellow Elements');
-                    });
-                    
-                    // âœ… Send WhatsApp message
-                    // $this->ultramsg->sendMessage(
-                    //     '91' . $request->post('phone'),
-                    //     "Hello {$fname}, welcome to Mellow Voult! ðŸ‘‹\n\nYour registration was successful. If you have any questions, we're here to help.\n\nâ€“ Team Mellow Voult"
-                    // );
+            // ✅ Send Email using PHPMailer
+            $mail = new PHPMailer(true);
 
-                     return view('developer/index');
-                }
-                else
-                {
-                    session(['message' =>'danger', 'errmsg'=>'Registration Not Complete']); 
-                    return redirect()->back();
-                }
-            }
-            else
-            {
-                session(['message' =>'danger', 'errmsg' =>'Email Address Already Exists.']);
-                return redirect()->back();
-            }
+            $mail->isSMTP();
+            $mail->Host       = 'mail.mellowvault.com';
+            $mail->SMTPAuth   = true;
+            $mail->Username   = 'test@mellowvault.com';
+            $mail->Password   = '@!TesT!@1234';
+            $mail->SMTPSecure = 'tls';
+            $mail->Port       = 587;
+
+            $mail->setFrom('test@mellowvault.com', 'mellowvault.com');
+            $mail->addAddress($request->email, $request->name);
+
+            $mail->isHTML(true);
+            $mail->Subject = 'Welcome to Mellow Vault';
+            $mail->Body    = "
+                <h2>Hello {$request->name},</h2>
+                <p>Thank you for registering on Mellow Vault.</p>
+                <p>We're excited to have you on board.</p>
+            ";
+
+            $mail->AltBody = "Hello {$request->name}, Thank you for registering on Mellow Vault.";
+
+            $mail->send();
+
+            DB::commit();
+
+            return redirect()->route('developer_admin')
+                ->with('success', 'Registration Complete');
+
+        } catch (\Exception $e) {
+            DB::rollBack();
+            \Log::error('Developer registration error: ' . $e->getMessage());
+            return redirect()->back()
+                ->with('error', 'Registration could not be completed. Please try again.')
+                ->withInput();
+        }
     }
+
 
     public function developer_admin()
     {   

@@ -193,6 +193,32 @@ class userController extends Controller
                     //     }
                 	// 	$message->from('welcome@mellowvault.com', 'Mellow Vault');
             		// });
+
+					 // ✅ Send Email using PHPMailer
+						$mail = new PHPMailer(true);
+
+						$mail->isSMTP();
+						$mail->Host       = 'mail.mellowvault.com';
+						$mail->SMTPAuth   = true;
+						$mail->Username   = 'test@mellowvault.com';
+						$mail->Password   = '@!TesT!@1234';
+						$mail->SMTPSecure = 'tls';
+						$mail->Port       = 587;
+
+						$mail->setFrom('test@mellowvault.com', 'mellowvault.com');
+						$mail->addAddress($request->email, $request->name);
+
+						$mail->isHTML(true);
+						$mail->Subject = 'Welcome to Mellow Vault';
+						$mail->Body    = "
+							<h2>Hello {$request->name},</h2>
+							<p>Thank you for registering on Mellow Vault.</p>
+							<p>We're excited to have you on board.</p>
+						";
+
+						$mail->AltBody = "Hello {$request->name}, Thank you for registering on Mellow Vault.";
+
+						$mail->send();
             		
             		$show['developer_order_details']=$this->developer_order_data();
                 	$show['user_details'] = DB::table('user_login')->orderby('id','desc')->get(); 

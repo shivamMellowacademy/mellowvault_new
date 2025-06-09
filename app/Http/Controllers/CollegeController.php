@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Validator;
 
 class CollegeController extends Controller
 {
@@ -23,48 +24,60 @@ class CollegeController extends Controller
         ]);
 
         try {
-            // Find college by email
-            $college = DB::table('college')
-                    ->where('email', $validated['email'])
-                    ->where('status', 1) // Only allow active colleges
-                    ->first();
+            // Find college by email with proper column selection
+            $college = DB::table('college') // Changed from 'college' to 'college' (assuming standard plural naming)
+                ->where('email', $validated['email'])
+                ->select('id', 'name', 'email', 'password', 'status', 'last_login_at')
+                ->first();
 
-            // Check if college exists and password matches
-            if ($college && Hash::check($validated['password'], $college->password)) {
-                // Manually create session for college
-                session([
-                    'college_id' => $college->id,
-                    'college_name' => $college->name,
-                    'college_email' => $college->email,
-                    'last_login_at' => now()
-                ]);
-                
+            // Check if college exists
+            if (!$college) {
+                return back()->withInput()
+                    ->withErrors([
+                        'login_error' => 'Invalid credentials',
+                    ]);
+            }
 
-                // Record login time
-                DB::table('college')
+            // Check if account is active
+            if ($college->status != 1) {
+                return redirect()->route('college.login') // Fixed typo in route name
+                    ->with('message', 'Your account is not active. Please contact support.');
+            }
+
+            // Verify password
+            if (!Hash::check($validated['password'], $college->password)) {
+                return back()->withInput()
+                    ->withErrors([
+                        'login_error' => 'Invalid credentials',
+                    ]);
+            }
+
+            // Create session
+            session([
+                'college_id' => $college->id,
+                'college_name' => $college->name,
+                'college_email' => $college->email,
+                'last_login_at' => now()
+            ]);
+
+            // Update last login time
+            DB::table('college')
                 ->where('id', $college->id)
                 ->update(['last_login_at' => now()]);
 
-                return redirect()->intended(route('college.dashboard'))
-                            ->with('success', 'Login successful! Welcome back!');
-            }
-
-            // Return generic error message (better security practice)
-            return back()->withInput()
-                    ->withErrors([
-                        'login_error' => 'Invalid credentials or account not active',
-                    ])
-                    ->with('message', 'danger');
+            return redirect()->intended(route('college.dashboard'))
+                ->with('success', 'Login successful! Welcome back!');
 
         } catch (\Exception $e) {
-            // Log the error
-            \Log::error('College login error: ' . $e->getMessage());
+            \Log::error('College login error: ' . $e->getMessage(), [
+                'email' => $request->email,
+                'ip' => $request->ip()
+            ]);
             
             return back()->withInput()
-                    ->withErrors([
-                        'login_error' => 'An error occurred during login. Please try again.',
-                    ])
-                    ->with('message', 'danger');
+                ->withErrors([
+                    'login_error' => 'An error occurred during login. Please try again.',
+                ]);
         }
     }
 
@@ -88,7 +101,7 @@ class CollegeController extends Controller
 
     public function developersCreate()
     {
-        $data['college_list'] = DB::table('higher_professional_tb')->orderBy('id','DESC')->pluck('heading');
+        $data['college_list'] = DB::table('higher_professional_tb')->orderBy('id','DESC')->get();
 
         return view('college.developers.ceate')->with($data);
     }
@@ -97,7 +110,7 @@ class CollegeController extends Controller
     {
         // Validate the request data
         $validatedData = $request->validate([
-            'specialization' => 'required|exists:higher_professional_tb,heading',
+            'specialization' => 'required|exists:higher_professional_tb,id',
             'name' => 'required|string|max:100',
             'last_name' => 'required|string|max:100',
             'phone' => 'required|string|max:15|unique:developer_details_tb,phone',
@@ -106,22 +119,37 @@ class CollegeController extends Controller
         ]);
 
         try {
-            
-            // Create developer record
-            $developer = DB::table('developer_details_tb')->insertGetId([
-                'pro_id' => $request->specialization,
-                'name' => $request->name,
-                'last_name' => $request->last_name,
-                'phone' => $request->phone,
-                'email' => $request->email,
-                'password' => Hash::make($request->password),
-                'show_password' => $request->password, 
-                'profile_complete' => 30, 
-                'college_id'  => session('college_id'), 
-            ]);
 
-            // Redirect with success message
-            return redirect()->route('college.developers.index')->with('success', 'Developer created successfully!');
+            $college = DB::table('college')->where('id', session('college_id'))->first();
+
+            $count =  DB::table('developer_details_tb')->where('college_id', session('college_id'))->count();
+
+
+
+            if($college->count > $count)
+            {
+                // Create developer record
+                $developer = DB::table('developer_details_tb')->insertGetId([
+                    'pro_id' => $request->specialization,
+                    'name' => $request->name,
+                    'last_name' => $request->last_name,
+                    'phone' => $request->phone,
+                    'email' => $request->email,
+                    'password' => Hash::make($request->password),
+                    'show_password' => $request->password, 
+                    'profile_complete' => 30, 
+                    'college_id'  => session('college_id'), 
+                ]);
+
+                // Redirect with success message
+                return redirect()->route('college.developers.index')->with('success', 'Developer created successfully!');
+            }
+            else
+            {
+                return back()
+                    ->withInput()
+                    ->with('error', 'Developer limit reached for this college');
+            }
 
         } catch (\Exception $e) {
             // Log the error
@@ -130,6 +158,74 @@ class CollegeController extends Controller
             // Redirect back with error message
             return back()->withInput()
                         ->with('error', 'An error occurred while creating the developer. Please try again.');
+        }
+    }
+
+    public function developersShow($id)
+    {
+       
+        $developer = DB::table('developer_details_tb')->where('dev_id', $id)->first();
+
+        $companyDetails = DB::table('developer_order_tb')->where('dev_id', $developer->dev_id)->first();
+
+        $devProjectDetails = DB::table('developer_project_details_tb')->where('developer_id', $developer->dev_id)->get();
+
+        return view('college.developers.show', compact('developer', 'companyDetails', 'devProjectDetails'));
+      
+    }
+
+    public function collegeLogout()
+    {
+        session()->flush();
+
+        return redirect()->route('college.login')->with('success', 'You have been successfully logged out.');
+      
+    }
+
+    public function collegeChangePassword()
+    {
+        return view('college.changePassword');
+      
+    }
+
+    public function collegePasswordUpdate(Request $request)
+    {
+        $validator = Validator::make($request->all(), [
+            'current_password' => 'required|string',
+            'password' => 'required|string|min:8|confirmed',
+            'password_confirmation' => 'required|string',
+        ]);
+
+        // If validation fails, return error response
+        if ($validator->fails()) {
+            return redirect()->back()
+                ->withErrors($validator)
+                ->withInput();
+        }
+
+        $college = DB::table('college')->where('id', session('college_id'))->first();
+            // Verify current password
+        if (!Hash::check($request->current_password, $college->password)) {
+            return redirect()->back()
+                ->with('error', 'Current password is incorrect')
+                ->withInput();
+        }
+
+         try {
+        // Update password
+            $college->password = Hash::make($request->password);
+            $college->save();
+
+            return redirect()->back()
+                ->with('success', 'Password changed successfully!');
+
+        } catch (\Exception $e) {
+            // Log the error
+            Log::error('Password change error: ' . $e->getMessage());
+
+            return redirect()->back()
+                ->with('error', 'Something went wrong. Please try again later.')
+                ->withInput();
         }
     }
 }
