@@ -8,6 +8,7 @@ use App\Http\Controllers\GoogleCalendarController;
 use App\Http\Controllers\SubscriptionPlanController;
 use App\Http\Controllers\RazorpayPaymentController;
 use App\Http\Controllers\EmployerController;
+use App\Http\Controllers\CollegeController;
 
 /*
 |--------------------------------------------------------------------------
@@ -375,6 +376,21 @@ Route::post('send-email-notification','App\Http\Controllers\admincontroller@send
 Route::get('employers', [EmployerController::class, 'index'])->name('employer.list');
 Route::get('user/status-toggle/{id}', [EmployerController::class, 'toggleStatus'])->name('toggle_user_status');
 
+Route::get('/export-report-employer','App\Http\Controllers\admincontroller@reportEmployerExcel')->name('admin.report.employer');
+Route::get('/export-report-developer','App\Http\Controllers\admincontroller@reportDeveloperExcel')->name('admin.report.developer');
+
+
+// Route::post('/college-status','App\Http\Controllers\admincontroller@collegeStatus')->name('college.status');
+// Route::get('/college-create','App\Http\Controllers\admincontroller@collegeCreate')->name('college.create');
+
+Route::get('/college','App\Http\Controllers\admincontroller@showCollege')->name('admin.college.index');
+Route::get('/college/create', 'App\Http\Controllers\admincontroller@collegeCreate')->name('admin.college.create');
+Route::post('/college', 'App\Http\Controllers\admincontroller@collegeStore')->name('admin.college.store');
+Route::get('/college/{id}/edit', 'App\Http\Controllers\admincontroller@collegeEdit')->name('admin.college.edit');
+Route::post('/college/update', 'App\Http\Controllers\admincontroller@collegeUpdate')->name('admin.college.update');
+Route::post('/college/status', 'App\Http\Controllers\admincontroller@collegeUpdateStatus')->name('admin.college.status');
+Route::delete('/college/{id}', 'App\Http\Controllers\admincontroller@collegeDestroy')->name('admin.college.destroy');
+
 /*
 ---------------------------------------------------------------------------------------------------------
 ........................................ Developer Panel Routes Section......................................
@@ -580,9 +596,31 @@ Route::get('/check-monthly-payments', 'App\Http\Controllers\userController@check
 Route::get('/pay-salary-payment/{id}', 'App\Http\Controllers\userController@processSalaryPayment')->name('pay.salary.payment');
 Route::post('/verify-salary-payment', 'App\Http\Controllers\userController@verifySalaryPayment')->name('verify.salary.payment');
 
-Route::get('/export-employee-payout', 'App\Http\Controllers\adminController@getEmployeePayout')->name('admin.employee.export');
-Route::get('/export-active-developer-details', 'App\Http\Controllers\adminController@activeDeveloperDetails')->name('active.developer.details.export');
-Route::get('/export-premium-developer', 'App\Http\Controllers\adminController@premiumDeveloperExcel')->name('premium.developer.export');
-Route::get('/export-resoure-details', 'App\Http\Controllers\adminController@resoureDetailsExcel')->name('resoure.details.export');
+Route::get('/export-employee-payout', 'App\Http\Controllers\admincontroller@getEmployeePayout')->name('admin.employee.export');
+Route::get('/export-active-developer-details', 'App\Http\Controllers\admincontroller@activeDeveloperDetails')->name('active.developer.details.export');
+Route::get('/export-premium-developer', 'App\Http\Controllers\admincontroller@premiumDeveloperExcel')->name('premium.developer.export');
+Route::get('/export-resoure-details', 'App\Http\Controllers\admincontroller@resoureDetailsExcel')->name('resoure.details.export');
 
 Route::get('/export-employers', [EmployerController::class, 'exportEmployers'])->name('export.employers');
+
+Route::get('/admin-send-mail', 'App\Http\Controllers\admincontroller@sendMail')->name('admin.send.mail');
+Route::post('/admin-send-mail-save', 'App\Http\Controllers\admincontroller@sendMailSave')->name('admin.send.mail.save');
+
+
+
+
+
+
+Route::get('/college/login', [CollegeController::class, 'index'])->name('college.login');
+Route::post('/college/login', [CollegeController::class, 'store'])->name('college.login');
+Route::get('/college/dashboard', [CollegeController::class, 'dashboard'])->name('college.dashboard');
+Route::get('/college/developers/index', [CollegeController::class, 'developersIndex'])->name('college.developers.index');
+Route::get('/college/developers/create', [CollegeController::class, 'developersCreate'])->name('college.developers.create');
+Route::post('/college/developers/store', [CollegeController::class, 'developersStore'])->name('college.developers.store');
+
+
+Route::get('/college/dashboard/stats', [CollegeController::class, 'dashboardStats'])->name('college.dashboard.stats');
+Route::get('/college/developers/show', [CollegeController::class, 'developersShow'])->name('college.developers.show');
+Route::get('/college/developers/edit', [CollegeController::class, 'developersEdit'])->name('college.developers.edit');
+
+Route::get('/college/developers/toggle-status', [CollegeController::class, 'developersToggleStatus'])->name('college.developers.toggle-status');

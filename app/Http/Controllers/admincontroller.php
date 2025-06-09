@@ -23,6 +23,11 @@ use App\Exports\EmployeePayoutExport;
 use App\Exports\ActiveDeveloperDetailsExport;
 use App\Exports\premiumDeveloperExcel;
 use App\Exports\resoureDetailsExcel;
+use App\Mail\StaffAccountCreated;
+use App\Jobs\SendEmailJob;
+use App\Exports\DeveloperDetialExcel;
+use App\Exports\EmployerDetialExcel;
+use Illuminate\Support\Facades\Hash;
 
 
 class admincontroller extends Controller
@@ -3443,5 +3448,257 @@ public function update_developer_details(Request $request)
 
         return Excel::download(new resoureDetailsExcel($payout), 'resoure_details.xlsx');
     }
+
+    public function sendMail(Request $request)
+    {
+        $email= Session::get('admin_login_role');
+
+        $data['rolesdetails'] = DB::table('admin_tb')->where('role',$email)->get();
+
+        return view('admin.sendMail')->with($data);
+    }
+
+    public function sendMailSave(Request $request)
+    {
+
+        $recipients = $this->getRecipients($request->recipient_type, $request->email);
+        
+        if (empty($recipients)) {
+            return response()->json([
+                'success' => false,
+                'message' => 'No valid recipients provided'
+            ], 400);
+        }
+
+        $staff = (object)[
+            'name' => $request->sender_name,
+            'email' => $request->email ?? 'no-reply@example.com'
+        ];
+
+        try {
+            // Process attachments for queuing
+            $attachmentsForQueue = [];
+            if ($request->hasFile('attachments')) {
+                foreach ($request->file('attachments') as $file) {
+                    // Store the file content directly in the job (for small files)
+                    $attachmentsForQueue[] = [
+                        'content' => file_get_contents($file->getRealPath()),
+                        'original_name' => $file->getClientOriginalName(),
+                        'mime_type' => $file->getMimeType()
+                    ];
+                }
+            }
+
+            $failedRecipients = [];
+            $successCount = 0;
+            
+            foreach ($recipients as $recipient) {
+                try {
+                    // SendEmailJob::dispatch(
+                    //     $recipient,
+                    //     $staff,
+                    //     $request->subject,
+                    //     $request->message,
+                    //     $attachmentsForQueue
+                    // )->onQueue('emails');
+
+                    Mail::to($recipient)->queue(
+                        new StaffAccountCreated(
+                            $staff,
+                            $request->subject,
+                            $request->message,
+                            $attachmentsForQueue
+                        )
+                    );
+                    
+                    $successCount++;
+                } catch (\Exception $e) {
+                    $failedRecipients[$recipient] = $e->getMessage();
+                    \Log::error("Failed to dispatch email job for {$recipient}: " . $e->getMessage());
+                }
+            }
+
+            if (count($failedRecipients) > 0) {
+                return response()->json([
+                    'success' => $successCount > 0,
+                    'message' => $successCount > 0 
+                        ? 'Some emails were queued successfully' 
+                        : 'Failed to queue all emails',
+                    'failed_recipients' => $failedRecipients,
+                    'sent_count' => $successCount
+                ], $successCount > 0 ? 207 : 500);
+            }
+
+            // return response()->json([
+            //     'success' => true,
+            //     'message' => 'All emails were queued successfully for ' . count($recipients) . ' recipients'
+            // ]);
+
+            session(['message' => 'success', 'errmsg' => 'Email sent successfully!.']);
+            return redirect()->back();
+
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to process email request: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    protected function getRecipients($recipientType, $singleEmail = null)
+    {
+        $recipients = [];
+
+        switch ($recipientType) {
+            case 'developer':
+                $recipients = DB::table('developer_details_tb')->pluck('email')->toArray();
+                break;
+            case 'employer':
+                $recipients = DB::table('user_login')->pluck('email')->toArray();
+                break;
+            case 'all':
+                $devs = DB::table('developer_details_tb')->pluck('email')->toArray();
+                $emps = DB::table('user_login')->pluck('email')->toArray();
+                $recipients = array_merge($devs, $emps);
+                break;
+            case 'single':
+            default:
+                if ($singleEmail) {
+                    $recipients = [$singleEmail];
+                }
+                break;
+        }
+
+        return $recipients;
+    }
+
+    public function reportEmployerExcel()
+    {
+        
+        $payout = \App\Models\Employer::with(['bankDetail', 'kyc','hiredDevelopers'])->get();
+
+        return Excel::download(new EmployerDetialExcel($payout), 'employee_detail.xlsx');
+    }
     
+    public function reportDeveloperExcel()
+    {
+        $payout = \App\Models\Developer::with(['projects','developerOrders'])->get();
+    
+       return Excel::download(new DeveloperDetialExcel($payout), 'developer_detail.xlsx');
+    }
+
+    public function showCollege()
+    {
+        $email= Session::get('admin_login_role');
+
+        $data['rolesdetails'] = DB::table('admin_tb')->where('role',$email)->get();
+
+        $data['college'] = DB::table('college')->paginate('10');
+
+        return view('admin.college.index')->with($data);
+    }
+
+    public function collegeCreate()
+    {
+        $email= Session::get('admin_login_role');
+
+        $data['rolesdetails'] = DB::table('admin_tb')->where('role',$email)->get();
+
+        return view('admin.college.create')->with($data);
+    }
+
+    public function collegeStore(Request $request)
+    {
+        // Validate the request
+        $validated = $request->validate([
+            'name' => 'required|string|max:255',
+            'email' => 'required|email|unique:college,email|max:255',
+            'password' => 'required|string|min:8',
+            'address' => 'nullable|string',
+            'city' => 'nullable|string|max:100',
+            'state' => 'nullable|string|max:100',
+            'pincode' => 'nullable|string|max:20',
+            'count' => 'nullable|integer|min:0',
+            'status' => 'required|boolean',
+        ]);
+
+        try {
+            DB::table('college')->insert([
+                'name' => $validated['name'],
+                'email' => $validated['email'],
+                'password' => Hash::make($validated['password']), // Properly hashed password
+                'address' => $validated['address'],
+                'city' => $validated['city'],
+                'state' => $validated['state'],
+                'pincode' => $validated['pincode'],
+                'count' => $validated['count'] ?? 0,
+                'status' => $validated['status'],
+                'created_at' => now(),
+                'updated_at' => now(),
+            ]);
+
+            return redirect()->route('admin.college.index')
+                ->with('success', 'College created successfully!');
+
+        } catch (\Exception $e) {
+            return back()->withInput()
+                ->with('error', 'Error creating college: ' . $e->getMessage());
+        }
+    }
+    
+    public function collegeEdit($id)
+    {
+        $email= Session::get('admin_login_role');
+        
+        $data['rolesdetails'] = DB::table('admin_tb')->where('role',$email)->get();
+        
+        $data['college'] = DB::table('college')->where('id',$id)->first();
+        
+        return view('admin.college.edit')->with($data);
+    }
+
+    public function collegeUpdate(Request $request)
+    {
+        // Validate the request
+        $validated = $request->validate([
+            'id' => 'required|exists:college,id',
+            'name' => 'required|string|max:255',
+            'email' => 'required|email|unique:college,email,'.$request->id.'|max:255', // Exclude current record
+            'password' => 'nullable|string|min:8',
+            'address' => 'nullable|string',
+            'city' => 'nullable|string|max:100',
+            'state' => 'nullable|string|max:100',
+            'pincode' => 'nullable|string|max:20',
+            'count' => 'nullable|integer|min:0',
+            'status' => 'required|boolean',
+        ]);
+
+        try {
+            $updateData = [
+                'name' => $validated['name'],
+                'email' => $validated['email'],
+                'address' => $validated['address'],
+                'city' => $validated['city'],
+                'state' => $validated['state'],
+                'pincode' => $validated['pincode'],
+                'count' => $validated['count'] ?? 0,
+                'status' => $validated['status'],
+                'updated_at' => now(),
+            ];
+
+            // Only update password if provided
+            if (!empty($validated['password'])) {
+                $updateData['password'] = Hash::make($validated['password']);
+            }
+
+            DB::table('college')->where('id', $validated['id'])->update($updateData);
+
+            return redirect()->route('admin.college.index')
+                ->with('success', 'College updated successfully!');
+
+        } catch (\Exception $e) {
+            return back()->withInput()
+                ->with('error', 'Error updating college: ' . $e->getMessage());
+        }
+    }
 }

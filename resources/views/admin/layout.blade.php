@@ -296,6 +296,43 @@ window.location.href = "adminindex";
                                         </ul>
                                     </li>
 
+                                  
+                                    <li>
+                                        <a href="#" class="">
+                                            <i class="material-icons">mail</i> 
+                                            Notification
+                                            <i class="material-icons">keyboard_arrow_down</i>
+                                        </a>
+                                        <ul class="submenu">
+                                            <li>
+                                                <a href="{{route('admin.send.mail')}}" class="{{ request()->routeIs('send.mail') ? 'active' : '' }}">
+                                                    Send a Mail
+                                                </a>
+                                            </li>
+                                        </ul>
+                                    </li>
+                                    
+                                     <li>
+                                        <a href="#" class="">
+                                            <i class="material-icons">report</i> 
+                                            Report
+                                            <i class="material-icons">keyboard_arrow_down</i>
+                                        </a>
+                                        <ul class="submenu">
+                                            <li>
+                                                <a href="{{route('admin.report.employer')}}" class="{{ request()->routeIs('send.mail') ? 'active' : '' }}">
+                                                    Employer
+                                                </a>
+                                            </li>
+                                            <li>
+                                                <a href="{{route('admin.report.developer')}}" class="{{ request()->routeIs('send.mail') ? 'active' : '' }}">
+                                                    Developer
+                                                </a>
+                                            </li>
+                                        </ul>
+                                    </li>
+                                    
+
                                     <!-- Employers -->
                                     <li>
                                         <a href="{{ route('employer.list') }}"
@@ -304,11 +341,11 @@ window.location.href = "adminindex";
                                         </a>
                                     </li>
 
-                                    <!-- Reward -->
+                                   
                                     <li>
-                                        <a href="{{ route('request_for_reward') }}"
-                                            class="{{ request()->routeIs('request_for_reward') ? 'active' : '' }}">
-                                            <i class="material-icons">military_tech</i> Reward
+                                        <a href="{{ route('admin.college.index') }}"
+                                            class="{{ request()->routeIs('show.college') ? 'active' : '' }}">
+                                            <i class="material-icons">school</i> College
                                         </a>
                                     </li>
 
